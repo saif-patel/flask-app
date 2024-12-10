@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install --upgrade pip
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region ca-central-1 | docker login --username AWS --password-stdin 517391495810.dkr.ecr.ca-central-1.amazonaws.com
+  build:
+    commands:
+      - echo "Building the Docker image..."
+      - docker build -t assignment3 .
+      - docker tag assignment3:latest 517391495810.dkr.ecr.ca-central-1.amazonaws.com/assignment3:latest
+  post_build:
+    commands:
+      - echo "Pushing the Docker image to ECR..."
+      - docker push 517391495810.dkr.ecr.ca-central-1.amazonaws.com/assignment3:latest
+      - echo "Creating imagedefinitions.json..."
+      - printf '[{"name":"patel-container","imageUri":"517391495810.dkr.ecr.ca-central-1.amazonaws.com/assignment3:latest"}]' > imagedefinitions.json
+      - echo "imagedefinitions.json created successfully."
+      - echo "Build completed on $(date)"
+      
+artifacts:
+  files:
+    - imagedefinitions.json
